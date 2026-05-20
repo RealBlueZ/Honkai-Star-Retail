@@ -1,6 +1,7 @@
-import 'package:fe_honkai_star_retail/pages/auth/admin/user/home_page.dart';
+import 'package:fe_honkai_star_retail/pages/admin/admin_dashboard_page.dart';
 import 'package:fe_honkai_star_retail/pages/auth/login_page.dart';
 import 'package:fe_honkai_star_retail/pages/auth/register_page.dart';
+import 'package:fe_honkai_star_retail/pages/user/home_page.dart';
 import 'package:fe_honkai_star_retail/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
         '/home': (context) => const HomePage(),
+        '/admin': (context) => const AdminDashboardPage(),
       },
     );
   }

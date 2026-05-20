@@ -1,3 +1,4 @@
+import 'package:fe_honkai_star_retail/pages/user/detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:fe_honkai_star_retail/models/resource_model.dart';
 
@@ -151,7 +152,16 @@ class _HomePageState extends State<HomePage> {
                             width: double.infinity,
 
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        DetailPage(resource: resource),
+                                  ),
+                                );
+                              },
                               child: const Text("Detail"),
                             ),
                           ),

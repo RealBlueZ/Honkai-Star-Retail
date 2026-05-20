@@ -131,6 +131,21 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
 
+                    //TEST BUTTON TO ADMIN PAGE
+                    const SizedBox(height: 10),
+
+                    SizedBox(
+                      width: double.infinity,
+
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/admin');
+                        },
+
+                        child: const Text("Login as Admin"),
+                      ),
+                    ),
+
                     const SizedBox(height: 20),
 
                     TextButton(
