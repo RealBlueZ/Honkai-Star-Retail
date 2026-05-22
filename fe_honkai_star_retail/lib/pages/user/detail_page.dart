@@ -1,10 +1,17 @@
+import 'package:fe_honkai_star_retail/models/cart_model.dart';
 import 'package:fe_honkai_star_retail/models/resource_model.dart';
+import 'package:fe_honkai_star_retail/widgets/quantity_selector.dart';
 import 'package:flutter/material.dart';
 
 class DetailPage extends StatefulWidget {
   final ResourceModel resource;
+  final List<CartModel> cartItems;
 
-  const DetailPage({super.key, required this.resource});
+  const DetailPage({
+    super.key,
+    required this.resource,
+    required this.cartItems,
+  });
 
   @override
   State<DetailPage> createState() => _DetailPageState();
@@ -112,39 +119,22 @@ class _DetailPageState extends State<DetailPage> {
 
               const SizedBox(height: 15),
 
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      if (quantity > 1) {
-                        setState(() {
-                          quantity--;
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.remove_circle),
-                  ),
-
-                  Text(
-                    quantity.toString(),
-
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  IconButton(
-                    onPressed: () {
-                      if (quantity < widget.resource.stock) {
-                        setState(() {
-                          quantity++;
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.add_circle),
-                  ),
-                ],
+              QuantitySelector(
+                quantity: quantity,
+                onAdd: () {
+                  if (quantity < widget.resource.stock) {
+                    setState(() {
+                      quantity++;
+                    });
+                  }
+                },
+                onRemove: () {
+                  if (quantity > 1) {
+                    setState(() {
+                      quantity--;
+                    });
+                  }
+                },
               ),
 
               const SizedBox(height: 30),
@@ -195,6 +185,32 @@ class _DetailPageState extends State<DetailPage> {
                     padding: EdgeInsets.symmetric(vertical: 15),
 
                     child: Text("Buy Now", style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              SizedBox(
+                width: double.infinity,
+
+                child: OutlinedButton(
+                  onPressed: () {
+                    widget.cartItems.add(
+                      CartModel(resource: widget.resource, quantity: quantity),
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("${widget.resource.name} added to cart"),
+                      ),
+                    );
+                  },
+
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 15),
+
+                    child: Text("Add to Cart", style: TextStyle(fontSize: 18)),
                   ),
                 ),
               ),

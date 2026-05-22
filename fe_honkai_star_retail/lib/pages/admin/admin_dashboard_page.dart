@@ -1,4 +1,7 @@
 import 'package:fe_honkai_star_retail/models/resource_model.dart';
+import 'package:fe_honkai_star_retail/pages/admin/add_resource_page.dart';
+import 'package:fe_honkai_star_retail/pages/admin/edit_resource_page.dart';
+import 'package:fe_honkai_star_retail/widgets/resource_card.dart';
 import 'package:flutter/material.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -14,7 +17,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       id: 1,
       name: "Stellar Jade",
       type: "Currency",
-      image: "assets/images/stellar_jade.webp",
+      image: "assets/images/Stellar_Jade.webp",
       stock: 120,
       price: 50000,
     ),
@@ -23,9 +26,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       id: 2,
       name: "Light Cone",
       type: "Weapon",
-      image: "assets/images/light_cone.webp",
+      image: "assets/images/Light_Cone.webp",
       stock: 30,
       price: 150000,
+    ),
+
+    ResourceModel(
+      id: 3,
+      name: "Credit",
+      type: "Material",
+      image: "assets/images/Credit.webp",
+      stock: 550,
+      price: 10000,
     ),
   ];
 
@@ -35,7 +47,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       appBar: AppBar(title: const Text("Admin Dashboard")),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddResourcePage()),
+          );
+        },
 
         child: const Icon(Icons.add),
       ),
@@ -45,79 +62,54 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         itemBuilder: (context, idx) {
           final resource = resources[idx];
 
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          return ResourceCard(
+            resource: resource,
 
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
+            onEdit: () {
+              Navigator.push(
+                context,
 
-            child: ListTile(
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-
-                child: Image.asset(
-                  resource.image,
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
+                MaterialPageRoute(
+                  builder: (context) => EditResourcePage(resource: resource),
                 ),
-              ),
+              );
+            },
 
-              title: Text(resource.name),
+            onDelete: () {
+              showDialog(
+                context: context,
 
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text("Delete Resource"),
 
-                children: [
-                  Text(resource.type),
+                    content: Text("Delete ${resource.name} ?"),
 
-                  Text("Stock: ${resource.stock}"),
-
-                  Text("Rp ${resource.price}"),
-                ],
-              ),
-
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-
-                children: [
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.edit, color: Colors.cyan),
-                  ),
-
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Delete Resource"),
-
-                            content: Text("Delete ${resource.name}?"),
-
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    resources.removeAt(idx);
-                                  });
-
-                                  Navigator.pop(context);
-                                },
-                                child: const Text("Delete"),
-                              ),
-                            ],
-                          );
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
                         },
-                      );
-                    },
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                  ),
-                ],
-              ),
-            ),
+
+                        child: const Text("Cancel"),
+                      ),
+
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            resources.removeAt(idx);
+                          });
+
+                          Navigator.pop(context);
+                        },
+
+                        child: const Text("Delete"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
           );
         },
       ),

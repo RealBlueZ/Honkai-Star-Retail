@@ -1,6 +1,9 @@
+import 'package:fe_honkai_star_retail/models/cart_model.dart';
+import 'package:fe_honkai_star_retail/pages/user/cart_page.dart';
 import 'package:fe_honkai_star_retail/pages/user/detail_page.dart';
-import 'package:flutter/material.dart';
+import 'package:fe_honkai_star_retail/pages/user/profile_page.dart';
 import 'package:fe_honkai_star_retail/models/resource_model.dart';
+import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,6 +13,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int selectedIndex = 0;
+
+  List<CartModel> cartItems = [];
   @override
   Widget build(BuildContext context) {
     final List<ResourceModel> resources = [
@@ -35,8 +41,8 @@ class _HomePageState extends State<HomePage> {
         id: 3,
         name: "Credits",
         type: "Material",
-        image: "assets/images/Credits_2.png",
-        stock: 5500,
+        image: "assets/images/Credit.webp",
+        stock: 550,
         price: 10000,
       ),
     ];
@@ -46,12 +52,36 @@ class _HomePageState extends State<HomePage> {
         title: const Text("Honkai Star Retail"),
 
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.shopping_cart)),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CartPage(cartItems: cartItems),
+                ),
+              );
+            },
+            icon: const Icon(Icons.shopping_cart),
+          ),
         ],
       ),
 
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
+        currentIndex: selectedIndex,
+
+        onTap: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfilePage()),
+            );
+          }
+        },
+
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
@@ -157,8 +187,10 @@ class _HomePageState extends State<HomePage> {
                                   context,
 
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        DetailPage(resource: resource),
+                                    builder: (context) => DetailPage(
+                                      resource: resource,
+                                      cartItems: cartItems,
+                                    ),
                                   ),
                                 );
                               },
