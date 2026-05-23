@@ -1,17 +1,13 @@
-import 'package:fe_honkai_star_retail/models/cart_model.dart';
 import 'package:fe_honkai_star_retail/models/resource_model.dart';
+import 'package:fe_honkai_star_retail/providers/cart_provider.dart';
 import 'package:fe_honkai_star_retail/widgets/quantity_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class DetailPage extends StatefulWidget {
   final ResourceModel resource;
-  final List<CartModel> cartItems;
 
-  const DetailPage({
-    super.key,
-    required this.resource,
-    required this.cartItems,
-  });
+  const DetailPage({super.key, required this.resource});
 
   @override
   State<DetailPage> createState() => _DetailPageState();
@@ -196,9 +192,10 @@ class _DetailPageState extends State<DetailPage> {
 
                 child: OutlinedButton(
                   onPressed: () {
-                    widget.cartItems.add(
-                      CartModel(resource: widget.resource, quantity: quantity),
-                    );
+                    Provider.of<CartProvider>(
+                      context,
+                      listen: false,
+                    ).addToCart(widget.resource, quantity);
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

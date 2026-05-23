@@ -18,8 +18,10 @@ class QuantitySelector extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
 
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(15),
+
+        border: Border.all(color: Colors.cyan, width: 1.5),
       ),
 
       child: Row(

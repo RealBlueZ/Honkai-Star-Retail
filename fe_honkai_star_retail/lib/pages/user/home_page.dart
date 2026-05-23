@@ -1,9 +1,10 @@
-import 'package:fe_honkai_star_retail/models/cart_model.dart';
 import 'package:fe_honkai_star_retail/pages/user/cart_page.dart';
 import 'package:fe_honkai_star_retail/pages/user/detail_page.dart';
 import 'package:fe_honkai_star_retail/pages/user/profile_page.dart';
 import 'package:fe_honkai_star_retail/models/resource_model.dart';
+import 'package:fe_honkai_star_retail/providers/cart_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,9 +16,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
 
-  List<CartModel> cartItems = [];
+  //List<CartModel> cartItems = [];
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
+
     final List<ResourceModel> resources = [
       ResourceModel(
         id: 1,
@@ -52,16 +55,43 @@ class _HomePageState extends State<HomePage> {
         title: const Text("Honkai Star Retail"),
 
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CartPage(cartItems: cartItems),
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CartPage()),
+                  );
+                },
+                icon: const Icon(Icons.shopping_cart),
+              ),
+
+              if (cart.items.isNotEmpty)
+                Positioned(
+                  right: 5,
+                  top: 5,
+
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+
+                    child: Text(
+                      cart.items.length.toString(),
+
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
-            icon: const Icon(Icons.shopping_cart),
+            ],
           ),
         ],
       ),
@@ -187,10 +217,8 @@ class _HomePageState extends State<HomePage> {
                                   context,
 
                                   MaterialPageRoute(
-                                    builder: (context) => DetailPage(
-                                      resource: resource,
-                                      cartItems: cartItems,
-                                    ),
+                                    builder: (context) =>
+                                        DetailPage(resource: resource),
                                   ),
                                 );
                               },
