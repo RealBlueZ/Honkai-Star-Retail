@@ -1,7 +1,7 @@
 const express = require('express');
 const passport = require('passport');
-const authRouter = require('./authRouter');
-const verifyToken = require('./authMiddleware');
+const authRouter = require('./controllers/authController');
+const verifyToken = require('./middlewares/authMiddleware');
 
 const app = express();
 
@@ -12,8 +12,7 @@ app.use(passport.initialize());
 // Daftarkan rute autentikasi
 app.use('/api/auth', authRouter);
 
-
-// Menggunakan middleware 'verifyToken' untuk memverifikasi bearer token 
+// Menggunakan middleware 'verifyToken' untuk memverifikasi bearer token
 app.post('/api/resources', verifyToken, (req, res) => {
     // Memeriksa role dari token yang didekripsi oleh middleware
     if (req.user.role !== 'admin') {
