@@ -1,3 +1,7 @@
+# Express
+express/node_modules
+express/.env
+
 # Miscellaneous
 *.class
 *.log

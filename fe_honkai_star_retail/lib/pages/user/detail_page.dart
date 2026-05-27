@@ -59,7 +59,7 @@ class _DetailPageState extends State<DetailPage> {
                 ),
 
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.2),
+                  color: Colors.purple.withAlpha(51), // 0.2 * 255
                   borderRadius: BorderRadius.circular(20),
                 ),
 
