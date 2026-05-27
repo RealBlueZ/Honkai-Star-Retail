@@ -94,13 +94,10 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Register")),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
-
         child: Form(
           key: _formKey,
-
           child: Column(
             children: [
               TextFormField(
@@ -173,19 +170,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
               SizedBox(
                 width: double.infinity,
-
+                height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: isLoading ? null : () {
+                    
                     if (_formKey.currentState!.validate()) {
+                      registerUser();
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Register berhasil")),
                       );
-
                       Navigator.pushNamed(context, '/login');
                     }
                   },
-
-                  child: const Text("Register"),
+                  child: isLoading ? const SizedBox(height: 20,) : const Text("Register"),
                 ),
               ),
             ],
