@@ -25,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
       isLoading = true;
     });
 
-  const String apiUrl = "http://10.0.2.2:3000/api/auth/register";
+  const String apiUrl = "http://localhost:3000/api/auth/register";
 
   try {
       final response = await http.post(
@@ -176,14 +176,16 @@ class _RegisterPageState extends State<RegisterPage> {
                     
                     if (_formKey.currentState!.validate()) {
                       registerUser();
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Register berhasil")),
-                      );
-                      Navigator.pushNamed(context, '/login');
                     }
                   },
-                  child: isLoading ? const SizedBox(height: 20,) : const Text("Register"),
+                  child: isLoading ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                    ): const Text("Register"),
                 ),
               ),
             ],
