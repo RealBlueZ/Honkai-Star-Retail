@@ -1,7 +1,10 @@
 const express = require('express');
 const passport = require('passport');
+const dotenv = require('dotenv');
 const authRouter = require('./controllers/authController');
 const verifyToken = require('./middlewares/authMiddleware');
+
+dotenv.config();
 
 const app = express();
 

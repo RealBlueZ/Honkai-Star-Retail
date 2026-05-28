@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleSignInService {
@@ -7,7 +8,7 @@ class GoogleSignInService {
     try {
       return await _googleSignIn.signIn();
     } catch (e) {
-      print(e);
+      developer.log(e.toString());
       return null;
     }
   }

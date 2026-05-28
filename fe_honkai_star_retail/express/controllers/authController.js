@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const crypto = require('crypto');
-const db = require('./config/db');
+const db = require('../config/db');
 
 const router = express.Router();
 
@@ -13,7 +13,7 @@ const router = express.Router();
 // ==========================================
 
 passport.use(new GoogleStrategy({
-    clientX509CertUrl: process.env.GOOGLE_CLIENT_ID,
+    clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: process.env.GOOGLE_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {

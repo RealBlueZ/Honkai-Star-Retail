@@ -169,19 +169,30 @@ class _LoginPageState extends State<LoginPage> {
 
                       child: ElevatedButton.icon(
                         onPressed: () async {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
                           final user = await _googleSignIn.signIn();
 
-                          if (user != null) {
-                            if (!mounted) return;
+                          if (!mounted) return;
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Welcome ${user.displayName}'),
+                          if (user == null) {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('Google sign-in canceled'),
                               ),
                             );
-
-                            Navigator.pushNamed(context, '/home');
+                            return;
                           }
+
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Welcome ${user.displayName ?? 'User'}',
+                              ),
+                            ),
+                          );
+
+                          navigator.pushNamed('/home');
                         },
 
                         icon: Image.asset(
