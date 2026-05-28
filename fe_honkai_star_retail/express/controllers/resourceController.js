@@ -1,8 +1,33 @@
 const express = require('express');
 const db = require('../config/db');
-const { verifyToken } = require('../middlewares/authMiddleware');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { verifyToken, isAdmin } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
+
+const uploadDir = path.join(__dirname, '../public/images');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir); // Menyimpan ke folder public/uploads
+    },
+    filename: (req, file, cb) => {
+        // Mengubah nama file menjadi unik: timestamp + ekstensi asli (misal: 171698234_foto.jpg)
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    cb(null, true);
+};
+
+const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 // 1. [GET] AMBIL SEMUA DATA BARANG (Bisa diakses siapa saja - User & Admin)
 router.get('/resources', async (req, res) => {
@@ -30,32 +55,42 @@ router.get('/resources/:id', async (req, res) => {
 
 // 3. [POST] TAMBAH BARANG BARU (Hanya Admin & Wajib Verifikasi Token)
 router.post('/resources', verifyToken, isAdmin, async (req, res) => {
-    const { name, type, description, stock, image, price } = req.body;
+    // 1. Ambil data dari req.body. Pastikan membaca 'image_url' sesuai kiriman Flutter terbaru!
+    const { name, type, description, stock, image_url, price } = req.body;
 
-    // Validasi input backend
-    if (!name || !type || !description || !stock || !image || !price) {
-        return res.status(400).json({ message: 'All fields are required.' });
+    // 2. Validasi Keamanan: Pastikan field penting tidak kosong
+    if (!name || !type || stock === undefined || !image_url || price === undefined) {
+        return res.status(400).json({ message: 'Fields name, type, stock, image_url, and price are required.' });
     }
+
+    const finalDescription = description || "No description provided";
 
     try {
         const [result] = await db.execute(
-            'INSERT INTO resources (name, type, description, stock, image, price) VALUES (?, ?, ?, ?, ?, ?)',
-            [name, type, description, stock, image, price]
+            'INSERT INTO resources (name, type, description, stock, image_url, price) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, type, finalDescription, stock, image_url, price]
         );
+        
         res.status(201).json({ success: true, message: 'Resource added successfully!', id: result.insertId });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+
+        console.error("DATABASE CRASH LOG:", error.message); 
+        
+        res.status(500).json({ 
+            message: 'Server Database Error', 
+            error: error.message
+        });
     }
 });
 
 // 4. [PUT] UPDATE BARANG (Hanya Admin)
-router.put('/resources/:id', verifyAdminToken, async (req, res) => {
+router.put('/resources/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
     const { name, type, description, stock, image, price } = req.body;
 
     try {
         await db.execute(
-            'UPDATE resources SET name=?, type=?, description=?, stock=?, image=?, price=? WHERE id=?',
+            'UPDATE resources SET name=?, type=?, description=?, stock=?, image_url=?, price=? WHERE id=?',
             [name, type, description, stock, image, price, id]
         );
         res.status(200).json({ success: true, message: 'Resource updated successfully!' });
@@ -65,13 +100,31 @@ router.put('/resources/:id', verifyAdminToken, async (req, res) => {
 });
 
 // 5. [DELETE] HAPUS BARANG (Hanya Admin)
-router.delete('/resources/:id', verifyAdminToken, async (req, res) => {
+router.delete('/resources/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
     try {
         await db.execute('DELETE FROM resources WHERE id = ?', [id]);
         res.status(200).json({ success: true, message: 'Resource deleted successfully!' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+router.post('/upload-image', verifyToken, isAdmin, upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+        
+        // Kembalikan nama file yang tersimpan ke Flutter
+        res.status(200).json({
+            success: true,
+            message: 'Image uploaded successfully!',
+            filename: req.file.filename, // Nama file unik untuk disimpan di MySQL
+            url: `http://10.0.2.2:3000/uploads/${req.file.filename}` // URL lengkap untuk testing
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Upload failed', error: error.message });
     }
 });
 

@@ -23,7 +23,7 @@ class ResourceModel {
       name: json['name'] ?? '',
       type: json['type'] ?? '',
       description: json['description'] ?? 'No description provided',
-      image: json['image'] ?? '',
+      image: json['image_url'] ?? '',
       stock: json['stock'] is int
           ? json['stock']
           : int.parse(json['stock'].toString()),
@@ -39,7 +39,7 @@ class ResourceModel {
       'name': name,
       'type': type,
       'description': description,
-      'image': image,
+      'image_url': image,
       'stock': stock,
       'price': price,
     };

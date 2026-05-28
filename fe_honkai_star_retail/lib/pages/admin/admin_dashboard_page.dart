@@ -18,7 +18,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   List<ResourceModel> resources = [];
   bool isLoading = true;
 
-  final String baseUrl = "http://10.0.2.2:3000/api";
+  // TODO: Untuk keperluan produksi, token harus diambil dinamis dari halaman Login 
+  // dan disimpan menggunakan SharedPreferences. 
+  // Token di bawah ini di-hardcode sementara hanya untuk kebutuhan demonstrasi pengujian fitur Admin.
+  final String baseUrl = "http://localhost:3000/api";
   final String adminToken = "n8x7wfqtsrvxnvsm8dcz";
 
   @override
