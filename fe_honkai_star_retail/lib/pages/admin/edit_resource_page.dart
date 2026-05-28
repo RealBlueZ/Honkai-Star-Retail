@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:fe_honkai_star_retail/models/resource_model.dart';
 import 'package:fe_honkai_star_retail/widgets/custom_textfield.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class EditResourcePage extends StatefulWidget {
   final ResourceModel resource;
@@ -10,9 +13,9 @@ class EditResourcePage extends StatefulWidget {
   @override
   State<EditResourcePage> createState() => _EditResourcePageState();
 }
-
 class _EditResourcePageState extends State<EditResourcePage> {
   final _formKey = GlobalKey<FormState>();
+  bool isUpdating = false;
 
   late TextEditingController nameController;
   late TextEditingController typeController;
@@ -20,19 +23,58 @@ class _EditResourcePageState extends State<EditResourcePage> {
   late TextEditingController priceController;
   late TextEditingController imageController;
 
+  // TODO: Untuk keperluan produksi, token harus diambil dinamis dari halaman Login 
+  // dan disimpan menggunakan SharedPreferences. 
+  // Token di bawah ini di-hardcode sementara hanya untuk kebutuhan demonstrasi pengujian fitur Admin.
+  final String baseUrl = "http://10.0.2.2:3000/api";
+  final String adminToken = "n8x7wfqtsrvxnvsm8dcz";
+
   @override
   void initState() {
     super.initState();
-
     nameController = TextEditingController(text: widget.resource.name);
     typeController = TextEditingController(text: widget.resource.type);
-    stockController = TextEditingController(
-      text: widget.resource.stock.toString(),
-    );
-    priceController = TextEditingController(
-      text: widget.resource.price.toString(),
-    );
+    stockController = TextEditingController(text: widget.resource.stock.toString());
+    priceController = TextEditingController(text: widget.resource.price.toString());
     imageController = TextEditingController(text: widget.resource.image);
+  }
+
+  Future<void> updateResource() async {
+    setState(() => isUpdating = true);
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/resources/${widget.resource.id}'), // Masukkan param ID barang
+        headers: {
+          'Authorization': 'Bearer $adminToken',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'name': nameController.text,
+          'type': typeController.text,
+          'description': widget.resource.description,
+          'stock': int.parse(stockController.text),
+          'price': int.parse(priceController.text),
+          'image': imageController.text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        if(!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Resource updated successfully!")),
+        );
+        Navigator.pop(context, true); // Sukses, kembalikan sinyal true untuk refresh dashboard
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? "Failed to update resource");
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Update failed: $e")),
+      );
+    } finally {
+      setState(() => isUpdating = false);
+    }
   }
 
   @override
@@ -139,29 +181,23 @@ class _EditResourcePageState extends State<EditResourcePage> {
                 SizedBox(
                   width: double.infinity,
 
+                  child: SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: isUpdating ? null : () {
                       if (_formKey.currentState!.validate()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Resource updated successfully!"),
-                          ),
-                        );
-
-                        Navigator.pop(context);
+                        updateResource(); // Eksekusi PUT Request
                       }
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15),
-
-                      child: Text(
-                        "Update Resource",
-                        style: TextStyle(fontSize: 18),
-                      ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      child: isUpdating
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Update Resource", style: TextStyle(fontSize: 18)),
                     ),
                   ),
                 ),
-              ],
+            )],
             ),
           ),
         ),

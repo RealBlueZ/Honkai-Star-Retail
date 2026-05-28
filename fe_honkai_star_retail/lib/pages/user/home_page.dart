@@ -21,34 +21,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
 
-    final List<ResourceModel> resources = [
-      ResourceModel(
-        id: 1,
-        name: "Stellar Jade",
-        type: "Currency",
-        image: "assets/images/Stellar_Jade.webp",
-        stock: 100,
-        price: 45000,
-      ),
-
-      ResourceModel(
-        id: 2,
-        name: "Light Cone",
-        type: "Weapon",
-        image: "assets/images/Light_Cone.webp",
-        stock: 25,
-        price: 200000,
-      ),
-
-      ResourceModel(
-        id: 3,
-        name: "Credits",
-        type: "Material",
-        image: "assets/images/Credit.webp",
-        stock: 550,
-        price: 10000,
-      ),
-    ];
+    final List<ResourceModel> resources = [];
 
     return Scaffold(
       appBar: AppBar(
