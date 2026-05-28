@@ -1,3 +1,4 @@
+import 'package:fe_honkai_star_retail/services/google_sign_in.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -12,6 +13,8 @@ class _LoginPageState extends State<LoginPage> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
+  final GoogleSignInService _googleSignIn = GoogleSignInService();
 
   bool obscurePassword = true;
 
@@ -153,7 +156,52 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.pushNamed(context, '/register');
                       },
 
-                      child: const Text("Belum punya akun? Register"),
+                      child: const Text(
+                        "Belum punya akun? Register",
+                        style: TextStyle(color: Color(0xFF9400D3)),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    SizedBox(
+                      width: double.infinity,
+
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final user = await _googleSignIn.signIn();
+
+                          if (user != null) {
+                            if (!mounted) return;
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Welcome ${user.displayName}'),
+                              ),
+                            );
+
+                            Navigator.pushNamed(context, '/home');
+                          }
+                        },
+
+                        icon: Image.asset(
+                          "assets/images/google_logo.webp",
+                          height: 20,
+                          width: 20,
+                        ),
+
+                        label: const Text(
+                          "Login with Google",
+                          style: TextStyle(color: Colors.black),
+                        ),
+
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          side: const BorderSide(color: Colors.grey),
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                      ),
                     ),
                   ],
                 ),
