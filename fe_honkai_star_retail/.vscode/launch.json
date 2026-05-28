@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Users/LENOVO/Documents/Tugas Kuliah/Semester 4/Mobile Hybrid Solution/AOL_LAB_MHS/honkai_star_retail/fe_honkai_star_retail",
+      "program": "c:/Users/LENOVO/Documents/Tugas Kuliah/Semester 4/Mobile Hybrid Solution/AOL_LAB_MHS/honkai_star_retail/fe_honkai_star_retail/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

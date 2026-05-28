@@ -4,13 +4,13 @@ class AppTheme {
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     scaffoldBackgroundColor: const Color(0xFF0F172A),
-
+    
     primaryColor: Colors.purple,
 
     colorScheme: ColorScheme.dark(
       primary: Colors.purple,
       secondary: Colors.cyan,
-    ),
+    ), 
 
     appBarTheme: const AppBarTheme(
       backgroundColor: Color(0xFF1E293B),

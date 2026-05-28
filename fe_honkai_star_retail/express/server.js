@@ -1,7 +1,10 @@
 const express = require('express');
 const passport = require('passport');
-const authRouter = require('./authRouter');
-const verifyToken = require('./authMiddleware');
+const dotenv = require('dotenv');
+const authRouter = require('./controllers/authController');
+const verifyToken = require('./middlewares/authMiddleware');
+
+dotenv.config();
 
 const app = express();
 
@@ -12,8 +15,7 @@ app.use(passport.initialize());
 // Daftarkan rute autentikasi
 app.use('/api/auth', authRouter);
 
-
-// Menggunakan middleware 'verifyToken' untuk memverifikasi bearer token 
+// Menggunakan middleware 'verifyToken' untuk memverifikasi bearer token
 app.post('/api/resources', verifyToken, (req, res) => {
     // Memeriksa role dari token yang didekripsi oleh middleware
     if (req.user.role !== 'admin') {
@@ -25,6 +27,6 @@ app.post('/api/resources', verifyToken, (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });
