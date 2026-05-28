@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:fe_honkai_star_retail/services/google_sign_in.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +21,82 @@ class _LoginPageState extends State<LoginPage> {
   final GoogleSignInService _googleSignIn = GoogleSignInService();
 
   bool obscurePassword = true;
+  bool isLoading = false;
+
+  Future<void> loginUser() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    const String apiUrl = "http://localhost:3000/api/auth/login";
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": emailController.text.trim(),
+          "password": passwordController.text,
+        }),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('bearer_token', responseData['token']);
+        await prefs.setString('user_role', responseData['user']['role']);
+
+        if (!mounted) return;
+
+        String role = responseData['user']['role'];
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? "Login Berhasil!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        if (role == 'admin') {
+          Navigator.pushReplacementNamed(context, '/admin');
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              responseData['message'] ?? "Email atau password salah.",
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Tidak dapat terhubung ke server: $error"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,30 +202,24 @@ class _LoginPageState extends State<LoginPage> {
 
                     SizedBox(
                       width: double.infinity,
-
+                      height: 50,
                       child: ElevatedButton(
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
-                            Navigator.pushNamed(context, '/home');
+                            loginUser();
                           }
                         },
 
-                        child: const Text("Login"),
-                      ),
-                    ),
-
-                    //TEST BUTTON TO ADMIN PAGE
-                    const SizedBox(height: 10),
-
-                    SizedBox(
-                      width: double.infinity,
-
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/admin');
-                        },
-
-                        child: const Text("Login as Admin"),
+                        child: isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text("Login"),
                       ),
                     ),
 
@@ -168,32 +242,112 @@ class _LoginPageState extends State<LoginPage> {
                       width: double.infinity,
 
                       child: ElevatedButton.icon(
-                        onPressed: () async {
-                          final navigator = Navigator.of(context);
-                          final messenger = ScaffoldMessenger.of(context);
-                          final user = await _googleSignIn.signIn();
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                final navigator = Navigator.of(context);
+                                final messenger = ScaffoldMessenger.of(context);
 
-                          if (!mounted) return;
+                                setState(() {
+                                  isLoading = true;
+                                });
 
-                          if (user == null) {
-                            messenger.showSnackBar(
-                              const SnackBar(
-                                content: Text('Google sign-in canceled'),
-                              ),
-                            );
-                            return;
-                          }
+                                try {
+                                  await _googleSignIn.signOut();
 
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Welcome ${user.displayName ?? 'User'}',
-                              ),
-                            ),
-                          );
+                                  final googleUser = await _googleSignIn
+                                      .signIn();
 
-                          navigator.pushNamed('/home');
-                        },
+                                  if (googleUser == null) {
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                    messenger.showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Google sign-in canceled',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  const String nativeGoogleUrl =
+                                      "http://localhost:3000/api/auth/google-native";
+
+                                  final response = await http.post(
+                                    Uri.parse(nativeGoogleUrl),
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                    },
+                                    body: jsonEncode({
+                                      "name":
+                                          googleUser.displayName ??
+                                          "Google User",
+                                      "email": googleUser.email,
+                                    }),
+                                  );
+
+                                  final Map<String, dynamic> responseData =
+                                      jsonDecode(response.body);
+
+                                  if (!mounted) return;
+
+                                  if (response.statusCode == 200 &&
+                                      responseData['success'] == true) {
+                                    final SharedPreferences prefs =
+                                        await SharedPreferences.getInstance();
+                                    await prefs.setString(
+                                      'bearer_token',
+                                      responseData['token'],
+                                    );
+                                    await prefs.setString(
+                                      'user_role',
+                                      responseData['user']['role'],
+                                    );
+                                    String role = responseData['user']['role'];
+
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Welcome ${googleUser.displayName ?? 'User'}',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+
+                                    if (role == 'admin') {
+                                      navigator.pushReplacementNamed('/admin');
+                                    } else {
+                                      navigator.pushReplacementNamed('/home');
+                                    }
+                                  } else {
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          responseData['message'] ??
+                                              "Gagal otentikasi Google.",
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text("Error Google Auth: $e"),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  }
+                                }
+                              },
 
                         icon: Image.asset(
                           "assets/images/google_logo.webp",

@@ -148,6 +148,43 @@ router.post('/login', async (req, res) => {
     }
 });
 
+router.post('/google-native', async (req, res) => {
+    const { name, email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email dari Google tidak ditemukan.' });
+    }
+
+    try {
+
+        let [users] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+        let user;
+
+        if (users.length === 0) {
+  
+            const [result] = await db.execute(
+                'INSERT INTO users (name, email, oauth_provider, role) VALUES (?, ?, ?, ?)',
+                [name, email, 'google', 'user']
+            );
+            user = { id: result.insertId, name, email, role: 'user' };
+        } else {
+            
+            user = users[0];
+        }
+
+        const token = await createUserSession(user);
+
+        res.status(200).json({
+            success: true,
+            message: 'Logged in via Google Mobile successfully!',
+            token: token,
+            user: user
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error pada Google Native Auth', error: error.message });
+    }
+});
+
 // 3. OAUTH GOOGLE ROUTING [GET] 
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
