@@ -34,13 +34,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchProducts() async {
     http.Response? response;
     try {
-      final response = await http.get(Uri.parse('$baseUrl/resources'));
+      response = await http.get(Uri.parse('$baseUrl/resources'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decodedBody = json.decode(response.body);
-        final List<dynamic> responseData = decodedBody['data'] ?? 
-                                           decodedBody['resources'] ?? 
-                                           decodedBody;
+        final List<dynamic> responseData =
+            decodedBody['data'] ?? decodedBody['resources'] ?? decodedBody;
         setState(() {
           resources = responseData
               .map((json) => ResourceModel.fromJson(json))
@@ -54,18 +53,10 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      if (e is TypeError) {
-        try {
-          final List<dynamic> responseData = json.decode(response!.body);
-          setState(() {
-            resources = responseData
-                .map((json) => ResourceModel.fromJson(json))
-                .toList();
-            isLoading = false;
-          });
-          return;
-        } catch (_) {}
-      }
+      setState(() {
+        errorMessage = 'Gagal terhubung ke backend. Pastikan server aktif.';
+        isLoading = false;
+      });
     }
   }
 
@@ -201,11 +192,12 @@ class _HomePageState extends State<HomePage> {
           Stack(
             children: [
               IconButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const CartPage()),
                   );
+                  fetchProducts();
                 },
                 icon: const Icon(Icons.shopping_cart),
               ),
