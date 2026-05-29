@@ -22,7 +22,7 @@ class _AddResourcePageState extends State<AddResourcePage> {
   final TextEditingController priceController = TextEditingController();
   final TextEditingController imageController = TextEditingController();
 
-  // TODO: Untuk keperluan produksi, token harus diambil dinamis dari halaman Login 
+  // Untuk keperluan produksi, token harus diambil dinamis dari halaman Login 
   // dan disimpan menggunakan SharedPreferences. 
   // Token di bawah ini di-hardcode sementara hanya untuk kebutuhan demonstrasi pengujian fitur Admin.
   
