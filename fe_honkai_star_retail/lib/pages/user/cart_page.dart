@@ -16,7 +16,7 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
-    
+
     return Scaffold(
       appBar: AppBar(title: const Text("Shopping Cart")),
       body: cart.items.isEmpty
@@ -76,14 +76,19 @@ class _CartPageState extends State<CartPage> {
                                     QuantitySelector(
                                       quantity: item.quantity,
                                       onAdd: () {
-                                        if (item.quantity >= item.resource.stock) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                        // VALIDASI DATA 1: Validasi batas maksimum stok dari backend
+                                        if (item.quantity >=
+                                            item.resource.stock) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: Text(
                                                 "Gagal menambah! Stok ${item.resource.name} terbatas hanya tersedia ${item.resource.stock} item.",
                                               ),
                                               backgroundColor: Colors.redAccent,
-                                              behavior: SnackBarBehavior.floating,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
                                             ),
                                           );
                                         } else {
@@ -171,13 +176,17 @@ class _CartPageState extends State<CartPage> {
                                 borderRadius: BorderRadius.circular(15),
                               ),
                             ),
-                            onPressed: () {
-                              Navigator.push(
+                            onPressed: () async {
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => const CheckoutPage(),
                                 ),
                               );
+                              if (result == true) {
+                                if (!mounted) return;
+                                Navigator.pop(context, true);
+                              }
                             },
                             child: const Text(
                               "Checkout Now",

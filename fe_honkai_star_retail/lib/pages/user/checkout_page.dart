@@ -73,9 +73,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   onPressed: () {
                     cart.clearCart();
                     Navigator.pop(dialogContext);
-                    Navigator.pop(context);
-
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    Navigator.pop(context, true);
                   },
                   child: const Text("OK", style: TextStyle(color: Colors.cyan)),
                 ),
