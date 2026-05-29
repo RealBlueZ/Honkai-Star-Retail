@@ -89,12 +89,14 @@ router.put('/resources/:id', verifyToken, isAdmin, async (req, res) => {
     const { name, type, description, stock, image, price } = req.body;
 
     try {
+        const desc = description || "No description provided";
         await db.execute(
             'UPDATE resources SET name=?, type=?, description=?, stock=?, image_url=?, price=? WHERE id=?',
             [name, type, description, stock, image, price, id]
         );
         res.status(200).json({ success: true, message: 'Resource updated successfully!' });
     } catch (error) {
+        console.error("DEBUG PUT ERROR:", error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
