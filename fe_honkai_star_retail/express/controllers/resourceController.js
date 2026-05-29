@@ -96,7 +96,6 @@ router.put('/resources/:id', verifyToken, isAdmin, async (req, res) => {
         );
         res.status(200).json({ success: true, message: 'Resource updated successfully!' });
     } catch (error) {
-        console.error("DEBUG PUT ERROR:", error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });

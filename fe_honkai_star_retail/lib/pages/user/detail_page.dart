@@ -132,12 +132,19 @@ class _DetailPageState extends State<DetailPage> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan),
                   onPressed: () async {
-                    await Navigator.push(
+                    Provider.of<CartProvider>(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const CartPage(),
-                      ),
+                      listen: false,
+                    ).addToCart(widget.resource, quantity);
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CartPage()),
                     );
+
+                    if (result == true) {
+                      if (!mounted) return;
+                      Navigator.pop(context, true);
+                    }
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 15),

@@ -52,15 +52,10 @@ class _HomePageState extends State<HomePage> {
       final response = await http.get(Uri.parse('$baseUrl/resources'));
 
       if (response.statusCode == 200) {
-        final decodedData = jsonDecode(response.body);
-        List<dynamic> fetchedItems = [];
-        if (decodedData is List) {
-          fetchedItems = decodedData;
-        } else if (decodedData is Map<String, dynamic>) {
-          fetchedItems = decodedData['data'] ?? decodedData['resources'] ?? [];
-        }
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        final List<dynamic> dataList = responseData['data'];
         setState(() {
-          resources = fetchedItems
+          resources = dataList
               .map((json) => ResourceModel.fromJson(json))
               .toList();
           filteredResources =
@@ -188,12 +183,15 @@ class _HomePageState extends State<HomePage> {
                                           width: double.infinity,
                                           fit: BoxFit.cover,
                                           errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  const Center(
-                                                    child: Icon(
-                                                      Icons.broken_image,
-                                                    ),
+                                              (context, error, stackTrace) {
+                                                return Container(
+                                                  color: Colors.grey,
+                                                  child: const Icon(
+                                                    Icons.image_not_supported,
+                                                    color: Colors.grey,
                                                   ),
+                                                );
+                                              },
                                         ),
                                       ),
                                     ),
@@ -280,11 +278,14 @@ class _HomePageState extends State<HomePage> {
               IconButton(
                 onPressed: () async {
                   // Menunggu ketika user kembali dari CartPage
-                  await Navigator.push(
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const CartPage()),
                   );
+
+                  if(result == true){
                   fetchProducts(); // Refresh data produk sepulang dari halaman cart/checkout
+                  }
                 },
                 icon: const Icon(Icons.shopping_cart),
               ),
@@ -305,7 +306,10 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: pages[selectedIndex],
+      body: IndexedStack(
+        index: selectedIndex, 
+        children: pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: selectedIndex,
         onTap: (index) {
