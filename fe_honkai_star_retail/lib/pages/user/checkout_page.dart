@@ -27,7 +27,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       String token = "n8x7wfqtsrvxnvsm8dcz";
 
       final response = await http.post(
-        Uri.parse("http://localhost:3000/api/transactions"),
+        Uri.parse("http://localhost:3000/api/checkout"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",

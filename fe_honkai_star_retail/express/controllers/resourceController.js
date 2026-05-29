@@ -168,6 +168,69 @@ router.post('/transactions', verifyToken, async (req, res) => {
     }
 });
 
+router.post('/checkout', verifyToken, async (req, res) => {
+    try {
+        const { total_price, items } = req.body;
+
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: 'Cart is empty' });
+        }
+
+        // Ambil user_id dari token yang terverifikasi (req.user dikirim dari verifyToken)
+        const userId = req.user.id; 
+
+        // Jalankan transaksi database (Looping item untuk update stock dan catat transaksi)
+        for (const item of items) {
+            const { resource_id, quantity } = item;
+            
+            // 1. Kurangi stok barang di database
+            await db.execute(
+                'UPDATE resources SET stock = stock - ? WHERE id = ?', 
+                [quantity, resource_id]
+            );
+
+            // 2. Masukkan ke tabel transactions sesuai struktur kolom databasemu
+            // Kolom id (auto increment) dan transaction_date (DEFAULT CURRENT_TIMESTAMP / NOW())
+            await db.execute(
+                'INSERT INTO transactions (user_id, resource_id, quantity, total_price) VALUES (?, ?, ?, ?)',
+                [userId, resource_id, quantity, total_price]
+            );
+        }
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Transaction processing successful! Database stock & history updated.' 
+        });
+
+    } catch (error) {
+        console.error("TRANSACTION CRASH LOG:", error.message);
+        res.status(500).json({ message: 'Server failed to process transaction', error: error.message });
+    }
+});
+
+router.get('/transactions', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Kita gunakan JOIN agar bisa mengambil nama barang dari tabel resources sekaligus
+        const [rows] = await db.execute(`
+            SELECT t.*, r.name AS resource_name 
+            FROM transactions t
+            JOIN resources r ON t.resource_id = r.id
+            WHERE t.user_id = ?
+            ORDER BY t.id DESC
+        `, [userId]);
+
+        res.status(200).json({
+            success: true,
+            data: rows
+        });
+    } catch (error) {
+        console.error("GET TRANSACTIONS ERROR:", error.message);
+        res.status(500).json({ message: 'Server failed to fetch transaction history', error: error.message });
+    }
+});
+
 router.post('/upload-image', verifyToken, isAdmin, upload.single('image'), (req, res) => {
     try {
         if (!req.file) {
