@@ -16,98 +16,92 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(title: const Text("Shopping Cart")),
-
-      body: Provider.of<CartProvider>(context).items.isEmpty
+      body: cart.items.isEmpty
           ? const EmptyCart()
           : Column(
               children: [
                 Expanded(
                   child: ListView.builder(
-                    itemCount: Provider.of<CartProvider>(context).items.length,
+                    itemCount: cart.items.length,
                     itemBuilder: (context, idx) {
-                      final item = Provider.of<CartProvider>(
-                        context,
-                      ).items[idx];
+                      final item = cart.items[idx];
 
                       return Card(
                         margin: const EdgeInsets.all(10),
-
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
-
                         child: Padding(
                           padding: const EdgeInsets.all(12),
-
                           child: Row(
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-
-                                child: Image.asset(
-                                  item.resource.image,
+                                child: Image.network(
+                                  "http://localhost:3000/images/${item.resource.image}",
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: Colors.grey[800],
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.white,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
-
                               const SizedBox(width: 15),
-
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       item.resource.name,
-
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-
                                     const SizedBox(height: 5),
-
                                     Text("Rp ${item.resource.price}"),
-
                                     const SizedBox(height: 10),
-
                                     QuantitySelector(
                                       quantity: item.quantity,
                                       onAdd: () {
-                                        setState(() {
-                                          Provider.of<CartProvider>(
-                                            context,
-                                            listen: false,
-                                          ).increaseQuantity(idx);
-                                        });
+                                        if (item.quantity >= item.resource.stock) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                "Gagal menambah! Stok ${item.resource.name} terbatas hanya tersedia ${item.resource.stock} item.",
+                                              ),
+                                              backgroundColor: Colors.redAccent,
+                                              behavior: SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        } else {
+                                          cart.increaseQuantity(idx);
+                                        }
                                       },
                                       onRemove: () {
-                                        setState(() {
-                                          if (item.quantity > 1) {
-                                            Provider.of<CartProvider>(
-                                              context,
-                                              listen: false,
-                                            ).decreaseQuantity(idx);
-                                          }
-                                        });
+                                        if (item.quantity > 1) {
+                                          cart.decreaseQuantity(idx);
+                                        }
                                       },
                                     ),
                                   ],
                                 ),
                               ),
-
                               IconButton(
                                 onPressed: () {
-                                  setState(() {
-                                    Provider.of<CartProvider>(
-                                      context,
-                                      listen: false,
-                                    ).removeItem(idx);
-                                  });
+                                  cart.removeItem(idx);
                                 },
                                 icon: const Icon(
                                   Icons.delete,
@@ -121,18 +115,14 @@ class _CartPageState extends State<CartPage> {
                     },
                   ),
                 ),
-
                 Container(
                   padding: const EdgeInsets.all(20),
-
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E293B),
-
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(25),
                       topRight: Radius.circular(25),
                     ),
-
                     boxShadow: [
                       BoxShadow(
                         blurRadius: 5,
@@ -140,23 +130,18 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ],
                   ),
-
                   child: SafeArea(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                           children: [
                             const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-
                               children: [
                                 Text(
                                   "Total Price",
-
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 16,
@@ -164,10 +149,8 @@ class _CartPageState extends State<CartPage> {
                                 ),
                               ],
                             ),
-
                             Text(
                               "Rp ${cart.totalPrice}",
-
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -176,18 +159,14 @@ class _CartPageState extends State<CartPage> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 20),
-
                         SizedBox(
                           width: double.infinity,
                           height: 55,
-
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.cyan,
                               foregroundColor: Colors.black,
-
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(15),
                               ),
