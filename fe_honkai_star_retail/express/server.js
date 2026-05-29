@@ -4,11 +4,13 @@ const path = require('path');
 const dotenv = require('dotenv');
 const authController = require('./controllers/authController');
 const resourceController = require('./controllers/resourceController');
+const cors = require('cors')
 
 dotenv.config();
 
 const app = express();
 
+app.use(cors())
 // Middleware parsing JSON body requests
 app.use(express.json());
 app.use(passport.initialize());

@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
         cb(null, uploadDir); // Menyimpan ke folder public/uploads
     },
     filename: (req, file, cb) => {
-        // Mengubah nama file menjadi unik: timestamp + ekstensi asli (misal: 171698234_foto.jpg)
+        // Mengubah nama file menjadi unik: timestamp + extension
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
@@ -107,6 +107,64 @@ router.delete('/resources/:id', verifyToken, isAdmin, async (req, res) => {
         res.status(200).json({ success: true, message: 'Resource deleted successfully!' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+router.post('/transactions', verifyToken, async (req, res) => {
+    const { total_price, items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ success: false, message: 'Keranjang belanja kosong.' });
+    }
+
+    try {
+        // VALIDASI
+        for (const item of items) {
+            const resource_id = item.resource_id ?? item.resourceId ?? item.id;
+            const quantity = item.quantity ?? item.qty ?? item.count;
+
+            if (resource_id === undefined || quantity === undefined) {
+                console.error("Validasi Gagal: Item transaksi kekurangan properti id/quantity!", item);
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Format data transaksi dari aplikasi salah (resource_id atau quantity bernilai undefined).' 
+                });
+            }
+
+            const [rows] = await db.execute('SELECT stock, name FROM resources WHERE id = ?', [resource_id]);
+            
+            if (rows.length === 0) {
+                return res.status(444).json({ success: false, message: `Barang dengan ID ${resource_id} tidak ditemukan.` });
+            }
+
+            const product = rows[0];
+
+            // Jika stok di DB kurang dari jumlah yang dibeli user, gagalkan transaksi secara aman
+            if (product.stock < quantity) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Checkout Gagal! Stok ${product.name} tidak mencukupi (Tersisa: ${product.stock}).` 
+                });
+            }
+        }
+
+        // EKSEKUSI DATA MUTATION
+        for (const item of items) {
+            const { resource_id, quantity } = item;
+            await db.execute('UPDATE resources SET stock = stock - ? WHERE id = ?', [quantity, resource_id]);
+        }
+
+        // Catatan Kelompok: Jika kamu memiliki tabel `transactions` di DB, buka komentar di bawah ini:
+        // await db.execute('INSERT INTO transactions (user_id, total_price) VALUES (?, ?)', [req.user.id, total_price]);
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Transaction processing successful! Database stock updated.' 
+        });
+
+    } catch (error) {
+        console.error("TRANSACTION CRASH LOG:", error.message);
+        res.status(500).json({ message: 'Server failed to process transaction', error: error.message });
     }
 });
 
