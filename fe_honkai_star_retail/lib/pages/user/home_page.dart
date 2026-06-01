@@ -21,12 +21,11 @@ class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
 
   List<ResourceModel> resources = [];
-  List<ResourceModel> filteredResources = []; // Untuk menampung hasil pencarian
+  List<ResourceModel> filteredResources = []; 
   bool isLoading = true;
   String errorMessage = '';
   final String baseUrl = "http://localhost:3000/api";
 
-  // Controller untuk mendeteksi ketikan di Search Bar
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -48,7 +47,6 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      // Menghilangkan duplikasi 'final' agar variabel 'response' di tingkat fungsi terisi
       final response = await http.get(Uri.parse('$baseUrl/resources'));
 
       if (response.statusCode == 200) {
@@ -58,8 +56,7 @@ class _HomePageState extends State<HomePage> {
           resources = dataList
               .map((json) => ResourceModel.fromJson(json))
               .toList();
-          filteredResources =
-              resources; // Set awal hasil filter sama dengan semua produk
+          filteredResources = resources; 
           isLoading = false;
         });
       } else {
@@ -76,7 +73,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Fungsi Filter untuk Search Bar (Validasi & Filter Lokal)
   void _filterProducts(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -92,181 +88,176 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Widget _buildHomeContent() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.cyan));
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(errorMessage, style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: fetchProducts,
+              child: const Text("Coba Lagi"),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(15.0),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            onChanged: _filterProducts,
+            decoration: InputDecoration(
+              hintText: "Search items (e.g. Stellar Jade)...",
+              prefixIcon: const Icon(Icons.search, color: Colors.cyan),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        _filterProducts('');
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: filteredResources.isEmpty
+                ? const Center(
+                    child: Text(
+                      "Product not found.",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.7,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                    ),
+                    itemCount: filteredResources.length,
+                    itemBuilder: (context, idx) {
+                      final resource = filteredResources[idx];
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(15),
+                                ),
+                                child: Image.network(
+                                  "http://localhost:3000/images/${resource.image}",
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey,
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    resource.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Rp ${resource.price}",
+                                    style: const TextStyle(
+                                      color: Colors.cyan,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Stock: ${resource.stock}",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.cyan,
+                                        foregroundColor: Colors.black,
+                                      ),
+                                      onPressed: () async {
+                                        final shouldRefresh = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => DetailPage(
+                                              resource: resource,
+                                            ),
+                                          ),
+                                        );
+                                        if (shouldRefresh == true) {
+                                          fetchProducts();
+                                        }
+                                      },
+                                      child: const Text("Detail"),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
 
-    // Kumpulan halaman utama berdasarkan BottomNavigationBar
+    // Kumpulan halaman didefinisikan secara eksplisit di sini
     final List<Widget> pages = [
-      // HALAMAN UTAMA (HOME)
-      isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.cyan))
-          : errorMessage.isNotEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(errorMessage, style: const TextStyle(color: Colors.red)),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: fetchProducts,
-                    child: const Text("Coba Lagi"),
-                  ),
-                ],
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Column(
-                children: [
-                  // SEARCH BAR (Sudah Berfungsi Aktif)
-                  TextField(
-                    controller: _searchController,
-                    onChanged: _filterProducts,
-                    decoration: InputDecoration(
-                      hintText: "Search items (e.g. Stellar Jade)...",
-                      prefixIcon: const Icon(Icons.search, color: Colors.cyan),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                _filterProducts('');
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // DAFTAR PRODUK (GRID VIEW)
-                  Expanded(
-                    child: filteredResources.isEmpty
-                        ? const Center(
-                            child: Text(
-                              "Product not found.",
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                              ),
-                            ),
-                          )
-                        : GridView.builder(
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.7,
-                                  crossAxisSpacing: 15,
-                                  mainAxisSpacing: 15,
-                                ),
-                            itemCount: filteredResources.length,
-                            itemBuilder: (context, idx) {
-                              final resource = filteredResources[idx];
-                              return Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            const BorderRadius.vertical(
-                                              top: Radius.circular(15),
-                                            ),
-                                        child: Image.network(
-                                          "http://localhost:3000/images/${resource.image}",
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                                return Container(
-                                                  color: Colors.grey,
-                                                  child: const Icon(
-                                                    Icons.image_not_supported,
-                                                    color: Colors.grey,
-                                                  ),
-                                                );
-                                              },
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            resource.name,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 5),
-                                          Text(
-                                            "Rp ${resource.price}",
-                                            style: const TextStyle(
-                                              color: Colors.cyan,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 5),
-                                          Text(
-                                            "Stock: ${resource.stock}",
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          SizedBox(
-                                            width: double.infinity,
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.cyan,
-                                                foregroundColor: Colors.black,
-                                              ),
-                                              onPressed: () async {
-                                                // Menunggu sinyal balik true dari DetailPage jika terjadi checkout
-                                                final shouldRefresh =
-                                                    await Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            DetailPage(
-                                                              resource:
-                                                                  resource,
-                                                            ),
-                                                      ),
-                                                    );
-                                                if (shouldRefresh == true) {
-                                                  fetchProducts(); // Sinkronisasi otomatis jumlah stok baru
-                                                }
-                                              },
-                                              child: const Text("Detail"),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            ),
-      // PAGES LAINNYA (Dinamis terhubung ke DB)
-      const PurchasePage(),
-      const ProfilePage(),
+      _buildHomeContent(),         // Index 0: Home
+      const PurchasePage(),        // Index 1: History
+      const ProfilePage(),         // Index 2: Profile
     ];
 
     return Scaffold(
@@ -277,14 +268,13 @@ class _HomePageState extends State<HomePage> {
             children: [
               IconButton(
                 onPressed: () async {
-                  // Menunggu ketika user kembali dari CartPage
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const CartPage()),
                   );
 
-                  if(result == true){
-                  fetchProducts(); // Refresh data produk sepulang dari halaman cart/checkout
+                  if (result == true) {
+                    fetchProducts();
                   }
                 },
                 icon: const Icon(Icons.shopping_cart),
@@ -306,6 +296,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      // IndexedStack untuk mempertahankan state halaman yang sedang dibuka
       body: IndexedStack(
         index: selectedIndex, 
         children: pages,
@@ -319,6 +310,7 @@ class _HomePageState extends State<HomePage> {
         },
         selectedItemColor: Colors.cyan,
         unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),

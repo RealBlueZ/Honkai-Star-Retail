@@ -136,14 +136,13 @@ class _DetailPageState extends State<DetailPage> {
                       context,
                       listen: false,
                     ).addToCart(widget.resource, quantity);
-                    final result = await Navigator.push(
-                      context,
+                    final navigator = Navigator.of(context);
+                    final result = await navigator.push(
                       MaterialPageRoute(builder: (context) => const CartPage()),
                     );
 
-                    if (result == true) {
-                      if (!mounted) return;
-                      Navigator.pop(context, true);
+                    if (result == true && mounted) {
+                      navigator.pop(true);
                     }
                   },
                   child: const Padding(
